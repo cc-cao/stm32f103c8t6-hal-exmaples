@@ -89,5 +89,4 @@ task("flash")
 task_end()
 
 -- 子模块 具体的 程序
-includes("hello")
 includes("examples")

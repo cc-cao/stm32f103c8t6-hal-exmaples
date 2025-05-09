@@ -1,3 +1,4 @@
+includes("0.hello")
 includes("1.led")
 includes("2.key")
 includes("3.oled")

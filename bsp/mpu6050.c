@@ -2,9 +2,13 @@
 #include "i2c.h"
 #include "mpu6050_reg.h"
 
+#define HI2C  1
 #define MPU_ADDR 0xD0
 
 void mpu_regw(uint8_t addr, uint8_t data) {
+#if HI2C
+    hi2c_reg_write(MPU_ADDR, addr, I2C_MEMADD_SIZE_8BIT, &data, 1);
+#else
     i2c_start();
     i2c_send_byte(MPU_ADDR);
     i2c_read_ack();
@@ -13,9 +17,14 @@ void mpu_regw(uint8_t addr, uint8_t data) {
     i2c_send_byte(data);
     i2c_read_ack();
     i2c_stop();
+#endif
 }
 
 uint8_t mpu_regr(uint8_t addr) {
+    uint8_t byte;
+#if HI2C
+    hi2c_reg_read(MPU_ADDR, addr, I2C_MEMADD_SIZE_8BIT, &byte, 1);
+#else
     i2c_start();
     i2c_send_byte(MPU_ADDR);
     i2c_read_ack();
@@ -25,16 +34,20 @@ uint8_t mpu_regr(uint8_t addr) {
     i2c_start();
     i2c_send_byte(MPU_ADDR | 0x01);
     i2c_read_ack();
-    uint8_t byte = i2c_read_byte();
+    byte = i2c_read_byte();
     i2c_send_ack(1);
     i2c_stop();
+#endif
 
     return byte;
 }
 
 void mpu_init() {
+#if HI2C
+    hi2c_init();
+#else
     i2c_init();
-
+#endif
     mpu_regw(MPU6050_PWR_MGMT_1, 0x01);
     mpu_regw(MPU6050_PWR_MGMT_2, 0x00);
 
@@ -42,6 +55,7 @@ void mpu_init() {
     mpu_regw(MPU6050_CONFIG, 0x06);
     mpu_regw(MPU6050_GYRO_CONFIG, 0x18);
     mpu_regw(MPU6050_ACCEL_CONFIG, 0x18);
+
 }
 
 void mpu_read(MPUData* data) {

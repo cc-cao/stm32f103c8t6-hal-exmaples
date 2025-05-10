@@ -1,3 +1,4 @@
 .xmake
 .vscode
 build
+.DS_Store

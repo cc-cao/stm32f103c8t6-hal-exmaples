@@ -22,6 +22,8 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+    RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+    RCC_OscInitStruct.LSIState = RCC_LSI_ON;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         Error_Handler();
     }
@@ -36,6 +38,12 @@ void SystemClock_Config(void) {
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
     if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+        Error_Handler();
+    }
+    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+    PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
         Error_Handler();
     }
 }
@@ -75,12 +83,10 @@ void delay_us(uint16_t us) {
 
     assert_param(HAL_TIM_Base_Init(&htim4) == HAL_OK);
 
-    __HAL_TIM_SET_COUNTER(&htim4, 0);  // 重置计数器
-    HAL_TIM_Base_Start(&htim4);        // 启动定时器
+    __HAL_TIM_SET_COUNTER(&htim4, 0); // 重置计数器
+    HAL_TIM_Base_Start(&htim4);       // 启动定时器
 
     while (__HAL_TIM_GET_COUNTER(&htim4) < us);
 
-    HAL_TIM_Base_Stop(&htim4);         // 停止定时器（可选）
+    HAL_TIM_Base_Stop(&htim4); // 停止定时器（可选）
 }
-
-

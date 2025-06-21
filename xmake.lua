@@ -4,11 +4,11 @@ add_rules("mode.release", "mode.debug")
 
 toolchain("gcc-arm-none-eabi")
     set_kind("standalone")
-    set_sdkdir(os.scriptdir() .. "/../arm-gnu-toolchain-14.2.rel1-darwin-arm64-arm-none-eabi")
+    set_sdkdir(os.scriptdir() .. "/../tools/arm-gnu-toolchain-14.2.rel1-darwin-arm64-arm-none-eabi")
 toolchain_end()
 
 set_toolchains("gcc-arm-none-eabi")
-set_defaultmode("release")
+set_defaultmode("debug")
 set_defaultplat("cross")
 set_defaultarchs("cortex-m3")
 
@@ -23,7 +23,14 @@ add_cxxflags(
     "-fno-rtti"
 )
 
-add_cxflags("-Os")
+-- if is_mode("debug") then
+--     add_cxflags("-g -gdwarf-2")
+-- else 
+--     add_cxflags("-Os")
+-- end
+
+add_cxflags("-Og -g")
+add_ldflags("-g")
 
 add_cxflags(
     "-mcpu=cortex-m3 -mthumb",
@@ -31,10 +38,6 @@ add_cxflags(
     "-Wno-missing-braces",
     {force = true}
 )
-
-if is_mode("debug") then
-    add_cxflags("-g -gdwarf-2")
-end
 
 add_asflags(
     "-mcpu=cortex-m3 -mthumb",
@@ -84,7 +87,8 @@ task("flash")
         if not target then
             raise("You must provide a target name with -t, e.g., xmake flash -t demo")
         end
-        os.exec("openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c 'adapter speed 10000; init; reset halt; wait_halt; program ./build/target/%s.bin 0x8000000 verify reset; shutdown'", target)
+        os.exec("probe-rs download --chip STM32F103C8 build/target/%s", target)
+        os.exec("probe-rs reset --chip STM32F103C8")
     end)
 task_end()
 

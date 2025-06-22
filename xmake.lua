@@ -1,20 +1,12 @@
 set_xmakever("2.9.9")
 set_project("stm32f103_demo")
 add_rules("mode.release", "mode.debug")
+set_rules("plugin.compile_commands.autoupdate", {outputdir = build})
 
-toolchain("gcc-arm-none-eabi")
-    set_kind("standalone")
-    set_sdkdir(os.scriptdir() .. "/../tools/arm-gnu-toolchain-14.2.rel1-darwin-arm64-arm-none-eabi")
-toolchain_end()
-
-set_toolchains("gcc-arm-none-eabi")
-set_defaultmode("debug")
 set_defaultplat("cross")
 set_defaultarchs("cortex-m3")
-
-set_targetdir("build/target")
-
 set_languages("c17", "c++20")
+set_targetdir("build/target")
 
 add_defines("USE_HAL_DRIVER", "STM32F103xB", "USE_FULL_ASSERT")
 
@@ -22,16 +14,6 @@ add_cxxflags(
     "-fno-exceptions",
     "-fno-rtti"
 )
-
--- if is_mode("debug") then
---     add_cxflags("-g -gdwarf-2")
--- else 
---     add_cxflags("-Os")
--- end
-
-add_cxflags("-Og -g")
-add_ldflags("-g")
-
 add_cxflags(
     "-mcpu=cortex-m3 -mthumb",
     "-Wall -fdata-sections -ffunction-sections",

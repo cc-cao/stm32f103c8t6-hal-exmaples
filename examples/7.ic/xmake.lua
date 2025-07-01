@@ -1,6 +1,6 @@
 target("ic")
     add_defines("USE_PRINT")
-
+    add_deps("stm32f1xx_driver")
     add_files(
         "./*.c", 
         "./*.cpp"

@@ -1,5 +1,5 @@
 target("flash")
-    
+    add_deps("stm32f1xx_driver")
     add_files(
         "./*.c", 
         "./*.cpp"

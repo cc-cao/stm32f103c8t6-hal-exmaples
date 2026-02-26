@@ -1,18 +1,22 @@
 #include "generic.h"
+#include "log.h"
 
 // 1. led闪烁
 void led_blink() {
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    GPIO_InitTypeDef gpio_def = {
-        .Pin = GPIO_PIN_0,
-        .Mode = GPIO_MODE_OUTPUT_PP,
-        .Speed = GPIO_SPEED_FREQ_HIGH,
-    };
-    HAL_GPIO_Init(GPIOA, &gpio_def);
+    log_init();
+    log("hello\n");
 
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    GPIO_InitTypeDef gpio_def = {
+        .Pin = GPIO_PIN_13,
+        .Mode = GPIO_MODE_OUTPUT_PP,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+    };
+    HAL_GPIO_Init(GPIOC, &gpio_def);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PinState::GPIO_PIN_SET);
     for (;;) {
-        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-        HAL_Delay(100);
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+        HAL_Delay(200);
     }
 }
 

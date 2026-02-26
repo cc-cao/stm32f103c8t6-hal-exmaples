@@ -3,12 +3,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <inttypes.h>
 #include "stm32f1xx_hal.h"
 #include "bsp/usart.h"
 
 #ifdef USE_PRINT
 #define log_init usart1_init
-#define log(fmt, ...) printf("[%06ld] %s(%d): " fmt "\n", HAL_GetTick(), __FILE__, __LINE__, ##__VA_ARGS__)
+#define log(fmt, ...) printf("[%06" PRIu32 "] %s(%d): " fmt "\n", HAL_GetTick(), __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 #define log_init()
 #define log(fmt, ...)

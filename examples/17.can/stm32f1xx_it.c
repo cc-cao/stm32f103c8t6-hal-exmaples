@@ -1,4 +1,5 @@
 #include "stm32f1xx_hal.h"
+#include "bsp/can.h"
 
 void NMI_Handler(void) {
     while (1) {
@@ -33,4 +34,8 @@ void PendSV_Handler(void) {}
 
 void SysTick_Handler(void) {
     HAL_IncTick();
+}
+
+void USB_LP_CAN1_RX0_IRQHandler(void) {
+    can_irq_dispatch();
 }

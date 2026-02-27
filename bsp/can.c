@@ -1,6 +1,8 @@
 #include "can.h"
+#include "log.h"
 
-static CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan1;
+volatile u8 can_rx_pending;
 
 void can_init() {
     __HAL_RCC_CAN1_CLK_ENABLE();
@@ -51,16 +53,18 @@ void can_init() {
     HAL_CAN_Start(&hcan1);
 }
 
-void can_write(u32 id, u8 len, u8* data) {
+void can_set_filter(CAN_FilterTypeDef* sFilterConfig) {
+    HAL_CAN_Stop(&hcan1);
+    HAL_CAN_ConfigFilter(&hcan1, sFilterConfig);
+    HAL_CAN_Start(&hcan1);
+}
+
+void can_write(CANMsg* msg) {
     CAN_TxHeaderTypeDef tx_header = {0};
     uint32_t tx_mailbox = 0;
 
-    if (len > 8) {
-        len = 8;
-    }
-
-    if ((len > 0U) && (data == NULL)) {
-        return;
+    if (msg->len > 8) {
+        msg->len = 8;
     }
 
     if (HAL_CAN_GetState(&hcan1) == HAL_CAN_STATE_READY) {
@@ -69,19 +73,19 @@ void can_write(u32 id, u8 len, u8* data) {
         }
     }
 
-    if (id <= 0x7FFU) {
-        tx_header.IDE = CAN_ID_STD;
-        tx_header.StdId = id;
+    tx_header.IDE = msg->ide;
+
+    if (tx_header.IDE == CAN_ID_STD) {
+        tx_header.StdId = msg->id;
     } else {
-        tx_header.IDE = CAN_ID_EXT;
-        tx_header.ExtId = (id & 0x1FFFFFFFU);
+        tx_header.ExtId = (msg->id & 0x1FFFFFFFU);
     }
 
-    tx_header.RTR = CAN_RTR_DATA;
-    tx_header.DLC = len;
+    tx_header.RTR = msg->rtr;
+    tx_header.DLC = msg->len;
     tx_header.TransmitGlobalTime = DISABLE;
 
-    if (HAL_CAN_AddTxMessage(&hcan1, &tx_header, data, &tx_mailbox) != HAL_OK) {
+    if (HAL_CAN_AddTxMessage(&hcan1, &tx_header, msg->data, &tx_mailbox) != HAL_OK) {
         return;
     }
 
@@ -90,18 +94,49 @@ void can_write(u32 id, u8 len, u8* data) {
 }
 
 u8 can_rx_flag() {
-    return (u8)HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
+    u8 fifo_level = (u8)HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
+    return (can_rx_pending > fifo_level) ? can_rx_pending : fifo_level;
 }
 
-void can_read(u32* id, u8* len, u8* data) {
+u8 can_get_rx_pending() {
+    return can_rx_pending;
+}
+
+void can_read(CANMsg* msg) {
     CAN_RxHeaderTypeDef pHeader;
-    HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &pHeader, data);
+    if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &pHeader, msg->data) != HAL_OK) {
+        return;
+    }
+    if (can_rx_pending > 0) {
+        can_rx_pending--;
+    }
+    HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 
     if (pHeader.IDE == CAN_ID_STD) {
-        *id = pHeader.StdId;
+        msg->id = pHeader.StdId;
     } else {
-        *id = pHeader.ExtId;
+        msg->id = pHeader.ExtId;
     }
 
-    *len = pHeader.DLC;
+    msg->len = pHeader.DLC;
+    msg->rtr = pHeader.RTR;
+    msg->ide = pHeader.IDE;
+}
+
+void can_isr_enable() {
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 5, 0);
+    HAL_NVIC_ClearPendingIRQ(USB_LP_CAN1_RX0_IRQn);
+    HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
+    HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
+    if (hcan->Instance == CAN1 && can_rx_pending < 0xFFU) {
+        HAL_CAN_DeactivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+        can_rx_pending++;
+    }
+}
+
+void can_irq_dispatch() {
+    HAL_CAN_IRQHandler(&hcan1);
 }

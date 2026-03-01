@@ -210,6 +210,7 @@ void isr_test() {
         kn = key_getnum();
         if (kn == 1) {
             can_write(&tx_msg);
+            tx_msg.data[0] += 1;
         } 
 
         if (can_get_rx_pending() > 0) {

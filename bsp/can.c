@@ -21,7 +21,8 @@ void can_init() {
     HAL_GPIO_Init(GPIOA, &gpio_def);
 
     hcan1.Instance = CAN1;
-    hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+    // hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+    hcan1.Init.Mode = CAN_MODE_NORMAL;
     // 125k clk / prescale / all tq
     hcan1.Init.Prescaler = 48; 
     hcan1.Init.TimeSeg1 = CAN_BS1_2TQ;

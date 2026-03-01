@@ -1,0 +1,29 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "inherits": "cfg-debug",
+      "cacheVariables": {
+        "ARM_GCC_BIN_DIR": "/Users/cc/.xmake/packages/g/gnu-rm/2024.12/1b49a25ea1c84e0280d219431ff93347/bin"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "cfg-release",
+      "cacheVariables": {
+        "ARM_GCC_BIN_DIR": "/Users/cc/.xmake/packages/g/gnu-rm/2024.12/1b49a25ea1c84e0280d219431ff93347/bin"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    }
+  ]
+}
